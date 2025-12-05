@@ -190,29 +190,69 @@ export default function RealEstateFinApp() {
   const handleSaveJpeg = async () => {
     if (generationNumber <= 0) return; // exports disabled until after first Okay
     if (simpleTableRef.current) {
-      const canvas = await html2canvas(simpleTableRef.current, {
-        scale: 2,
-        useCORS: true,
-      });
-      const link = document.createElement('a');
-      const gen = generationNumber || 1;
-      const fileDate = dateGeneratedFile || formatDateForFilename(new Date());
-      const finLabel = sanitizeFinancing(financing);
-      const fileName = `Sample Computation - ${finLabel} - ${fileDate} - ${gen}.jpg`;
-      link.download = fileName;
-      link.href = canvas.toDataURL('image/jpeg', 0.95);
-      link.click();
+      const el = simpleTableRef.current;
+      // Clone the element so we can render its full size offscreen without affecting layout
+      const clone = el.cloneNode(true);
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      // set explicit size to include scrollable content
+      clone.style.width = el.scrollWidth + 'px';
+      clone.style.height = el.scrollHeight + 'px';
+      clone.style.overflow = 'visible';
+      document.body.appendChild(clone);
+      try {
+        const scale = Math.min(2, window.devicePixelRatio || 1.5);
+        const canvas = await html2canvas(clone, {
+          scale,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          width: clone.scrollWidth,
+          height: clone.scrollHeight,
+          windowWidth: clone.scrollWidth,
+          windowHeight: clone.scrollHeight,
+          scrollX: 0,
+          scrollY: 0,
+        });
+        const link = document.createElement('a');
+        const gen = generationNumber || 1;
+        const fileDate = dateGeneratedFile || formatDateForFilename(new Date());
+        const finLabel = sanitizeFinancing(financing);
+        const fileName = `Sample Computation - ${finLabel} - ${fileDate} - ${gen}.jpg`;
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+      } finally {
+        // clean up the clone
+        document.body.removeChild(clone);
+      }
     }
   };
 
   const handleSavePdf = async () => {
     if (generationNumber <= 0) return; // exports disabled until after first Okay
     if (simpleTableRef.current) {
-      const canvas = await html2canvas(simpleTableRef.current, {
-        scale: 2,
-        useCORS: true,
-      });
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+      const el = simpleTableRef.current;
+      const clone = el.cloneNode(true);
+      clone.style.position = 'absolute';
+      clone.style.left = '-9999px';
+      clone.style.width = el.scrollWidth + 'px';
+      clone.style.height = el.scrollHeight + 'px';
+      clone.style.overflow = 'visible';
+      document.body.appendChild(clone);
+      try {
+        const scale = Math.min(2, window.devicePixelRatio || 1.5);
+        const canvas = await html2canvas(clone, {
+          scale,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+          width: clone.scrollWidth,
+          height: clone.scrollHeight,
+          windowWidth: clone.scrollWidth,
+          windowHeight: clone.scrollHeight,
+          scrollX: 0,
+          scrollY: 0,
+        });
+        const imgData = canvas.toDataURL('image/jpeg', 1.0);
       const pdfDoc = new jsPDF({
         orientation: 'p',
         unit: 'px',
@@ -228,6 +268,9 @@ export default function RealEstateFinApp() {
       const finLabel = sanitizeFinancing(financing);
       const fileName = `Sample Computation - ${finLabel} - ${fileDate} - ${gen}.pdf`;
       pdfDoc.save(fileName);
+      } finally {
+        document.body.removeChild(clone);
+      }
     }
   };
 

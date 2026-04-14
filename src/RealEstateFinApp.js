@@ -43,7 +43,7 @@ export default function RealEstateFinApp() {
   const financingOptions = {
     'Bank Financing': {
       incomeRatio: 0.35,
-      terms: [5, 10, 15, 20],
+      terms: [5, 10, 15, 20, 25, 30],
       defaultRate: 7.5,
     },
     'Pag-IBIG Financing': {
@@ -125,7 +125,7 @@ export default function RealEstateFinApp() {
     const allTerms = financingOptions[financing].terms;
     let idx = allTerms.indexOf(loanTerm);
     if (idx === -1) idx = allTerms.length - 1;
-    const start = Math.max(0, idx - 2);
+    const start = Math.max(0, idx - 3);
     const pickedSlice = allTerms.slice(start, idx + 1);
     const picked = pickedSlice.slice().reverse();
 
@@ -191,15 +191,37 @@ export default function RealEstateFinApp() {
     if (generationNumber <= 0) return; // exports disabled until after first Okay
     if (simpleTableRef.current) {
       const el = simpleTableRef.current;
+      // Remember original scroll position and reset to top to capture from the top
+      const originalScrollTop = el.scrollTop || 0;
+      try {
+        el.scrollTop = 0;
+      } catch (e) {}
+
       // Clone the element so we can render its full size offscreen without affecting layout
       const clone = el.cloneNode(true);
       clone.style.position = 'absolute';
       clone.style.left = '-9999px';
-      // set explicit size to include scrollable content
-      clone.style.width = el.scrollWidth + 'px';
-      clone.style.height = el.scrollHeight + 'px';
-      clone.style.overflow = 'visible';
+      clone.style.top = '0';
+      // Make all inner elements expand so nothing stays clipped by overflow
+      const expandAll = (node) => {
+        try {
+          node.style.overflow = 'visible';
+          node.style.overflowY = 'visible';
+          node.style.maxHeight = 'none';
+          node.style.height = 'auto';
+        } catch (e) {}
+        for (let i = 0; i < node.children.length; i++) expandAll(node.children[i]);
+      };
+      expandAll(clone);
+
       document.body.appendChild(clone);
+      // Allow layout to settle so scrollHeight includes expanded content
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      // set explicit size to include scrollable content after expansion
+      clone.style.width = clone.scrollWidth + 'px';
+      clone.style.height = clone.scrollHeight + 'px';
+      clone.style.overflow = 'visible';
+
       try {
         const scale = Math.min(2, window.devicePixelRatio || 1.5);
         const canvas = await html2canvas(clone, {
@@ -222,8 +244,9 @@ export default function RealEstateFinApp() {
         link.href = canvas.toDataURL('image/jpeg', 0.95);
         link.click();
       } finally {
-        // clean up the clone
-        document.body.removeChild(clone);
+        // clean up the clone and restore original scroll
+        try { document.body.removeChild(clone); } catch (e) {}
+        try { el.scrollTop = originalScrollTop; } catch (e) {}
       }
     }
   };
@@ -232,13 +255,30 @@ export default function RealEstateFinApp() {
     if (generationNumber <= 0) return; // exports disabled until after first Okay
     if (simpleTableRef.current) {
       const el = simpleTableRef.current;
+      // Remember original scroll position and reset to top
+      const originalScrollTop = el.scrollTop || 0;
+      try { el.scrollTop = 0; } catch (e) {}
+
       const clone = el.cloneNode(true);
       clone.style.position = 'absolute';
       clone.style.left = '-9999px';
-      clone.style.width = el.scrollWidth + 'px';
-      clone.style.height = el.scrollHeight + 'px';
-      clone.style.overflow = 'visible';
+      clone.style.top = '0';
+      const expandAll = (node) => {
+        try {
+          node.style.overflow = 'visible';
+          node.style.overflowY = 'visible';
+          node.style.maxHeight = 'none';
+          node.style.height = 'auto';
+        } catch (e) {}
+        for (let i = 0; i < node.children.length; i++) expandAll(node.children[i]);
+      };
+      expandAll(clone);
       document.body.appendChild(clone);
+      await new Promise((resolve) => setTimeout(resolve, 60));
+      clone.style.width = clone.scrollWidth + 'px';
+      clone.style.height = clone.scrollHeight + 'px';
+      clone.style.overflow = 'visible';
+
       try {
         const scale = Math.min(2, window.devicePixelRatio || 1.5);
         const canvas = await html2canvas(clone, {
@@ -267,9 +307,10 @@ export default function RealEstateFinApp() {
       const fileDate = dateGeneratedFile || formatDateForFilename(new Date());
       const finLabel = sanitizeFinancing(financing);
       const fileName = `Sample Computation - ${finLabel} - ${fileDate} - ${gen}.pdf`;
-      pdfDoc.save(fileName);
+        pdfDoc.save(fileName);
       } finally {
-        document.body.removeChild(clone);
+        try { document.body.removeChild(clone); } catch (e) {}
+        try { el.scrollTop = originalScrollTop; } catch (e) {}
       }
     }
   };

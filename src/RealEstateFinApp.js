@@ -247,7 +247,7 @@ export default function RealEstateFinApp() {
         const finLabel = sanitizeFinancing(financing);
         const fileName = `Sample Computation - ${finLabel} - ${fileDate} - ${gen}.jpg`;
         link.download = fileName;
-        link.href = resizedCanvas.toDataURL('image/jpeg', 0.75);
+        link.href = resizedCanvas.toDataURL('image/jpeg', 1.0);
         link.click();
       } finally {
         // clean up the clone and restore original scroll

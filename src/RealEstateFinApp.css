@@ -27,7 +27,7 @@
 }
 
 .data-entry-card {
-  background: #f3f4f6; /* light gray background for Data Entry window */
+  background: #fff;
 }
 
 .real-estate-app[data-theme='dark'] .data-entry-card {

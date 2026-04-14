@@ -125,7 +125,7 @@ export default function RealEstateFinApp() {
     const allTerms = financingOptions[financing].terms;
     let idx = allTerms.indexOf(loanTerm);
     if (idx === -1) idx = allTerms.length - 1;
-    const start = Math.max(0, idx - 3);
+    const start = Math.max(0, idx - 2);
     const pickedSlice = allTerms.slice(start, idx + 1);
     const picked = pickedSlice.slice().reverse();
 

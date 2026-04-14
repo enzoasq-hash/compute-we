@@ -235,13 +235,19 @@ export default function RealEstateFinApp() {
           scrollX: 0,
           scrollY: 0,
         });
+        // Resize to 1072x1324
+        const resizedCanvas = document.createElement('canvas');
+        resizedCanvas.width = 1072;
+        resizedCanvas.height = 1324;
+        const ctx = resizedCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0, 1072, 1324);
         const link = document.createElement('a');
         const gen = generationNumber || 1;
         const fileDate = dateGeneratedFile || formatDateForFilename(new Date());
         const finLabel = sanitizeFinancing(financing);
         const fileName = `Sample Computation - ${finLabel} - ${fileDate} - ${gen}.jpg`;
         link.download = fileName;
-        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.href = resizedCanvas.toDataURL('image/jpeg', 0.75);
         link.click();
       } finally {
         // clean up the clone and restore original scroll
